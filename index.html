@@ -58,15 +58,14 @@
             background-color: #050505;
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+                radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            /* Eliminado feTurbulence filter por severos costos de rendimiento en moviles */
             pointer-events: none;
-            /* Suavizado para monitores de alta tasa de refrescos */
             will-change: transform;
             overflow: hidden;
         }
 
-        /* Partículas de Polvo Dorado Flotante */
+        /* Partículas de Polvo Dorado Flotante (Hardware Accelerated) */
         .gold-dust {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -79,8 +78,9 @@
                 radial-gradient(1px 1px at 85% 90%, rgba(212, 175, 55, 0.8) 100%, transparent),
                 radial-gradient(1.5px 1.5px at 95% 40%, rgba(212, 175, 55, 0.4) 100%, transparent);
             background-size: 250px 250px;
-            animation: floatUp 120s linear infinite;
+            animation: floatUp1 120s linear infinite;
             opacity: 0.6;
+            will-change: transform;
         }
         .gold-dust.layer-2 {
             background-image: 
@@ -89,9 +89,8 @@
                 radial-gradient(1.5px 1.5px at 65% 75%, rgba(212, 175, 55, 0.9) 100%, transparent),
                 radial-gradient(2.5px 2.5px at 85% 15%, rgba(212, 175, 55, 0.5) 100%, transparent);
             background-size: 400px 400px;
-            animation: floatUp 180s linear infinite;
+            animation: floatUp2 180s linear infinite;
             opacity: 0.4;
-            transform: scale(1.3) rotate(15deg);
         }
         .gold-dust.layer-3 {
             background-image: 
@@ -99,14 +98,22 @@
                 radial-gradient(1.5px 1.5px at 50% 10%, rgba(212, 175, 55, 0.5) 100%, transparent),
                 radial-gradient(1px 1px at 80% 50%, rgba(255, 223, 112, 0.8) 100%, transparent);
             background-size: 550px 550px;
-            animation: floatUp 250s linear infinite;
+            animation: floatUp3 250s linear infinite;
             opacity: 0.5;
-            transform: scale(1.6) rotate(-10deg);
         }
 
-        @keyframes floatUp {
-            from { background-position: 0 0; }
-            to { background-position: 0 -1000px; }
+        /* Usar translate3d evita redibujar toda la pantalla (repaints) y salva bateria/rendimiento */
+        @keyframes floatUp1 {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(0, -1000px, 0); }
+        }
+        @keyframes floatUp2 {
+            0% { transform: scale(1.3) rotate(15deg) translate3d(0, 0, 0); }
+            100% { transform: scale(1.3) rotate(15deg) translate3d(0, -1000px, 0); }
+        }
+        @keyframes floatUp3 {
+            0% { transform: scale(1.6) rotate(-10deg) translate3d(0, 0, 0); }
+            100% { transform: scale(1.6) rotate(-10deg) translate3d(0, -1000px, 0); }
         }
 
         @media (max-width: 768px) {
@@ -383,8 +390,8 @@
         <footer class="mt-auto border-t border-gold-500/25 pt-[70px] pb-[20px] flex flex-col gap-12 shrink-0 relative">
             
             <div class="fade-in text-center w-full max-w-5xl mx-auto relative px-4">
-                <!-- Aura Glow Posterior Exterior -->
-                <div class="absolute inset-0 bg-gold-500/10 blur-[100px] rounded-[100%] pointer-events-none"></div>
+                <!-- Aura Glow Posterior Exterior (Optimizado) -->
+                <div class="absolute inset-0 bg-gold-500/10 blur-3xl rounded-[100%] pointer-events-none transform-gpu"></div>
                 
                 <div class="py-16 px-6 md:px-12 border border-gold-500/40 bg-gradient-to-b from-gold-500/15 via-black/60 to-[#020202] backdrop-blur-xl rounded-3xl relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9)] group">
                     <!-- Línea de Luz Superior -->
@@ -442,7 +449,7 @@
             observer.observe(el);
         });
 
-        // Efecto Parallax en el fondo
+        // Efecto Parallax en el fondo (Acelerado por Hardware)
         let ticking = false;
         window.addEventListener('scroll', () => {
             if (!ticking) {
@@ -450,14 +457,14 @@
                     const scrolled = window.pageYOffset;
                     const bg = document.getElementById('parallax-bg');
                     if(bg) {
-                        // El fondo se desplaza a un 35% de la velocidad de scroll normal
-                        bg.style.transform = `translateY(${scrolled * 0.35}px)`;
+                        // El fondo se desplaza a un 35% de la velocidad de scroll normal usando GPU
+                        bg.style.transform = `translate3d(0, ${scrolled * 0.35}px, 0)`;
                     }
                     ticking = false;
                 });
                 ticking = true;
             }
-        });
+        }, { passive: true });
     </script>
 </body>
 </html>
