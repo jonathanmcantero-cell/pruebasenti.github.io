@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Georgia", serif;
+  
+  --color-gold-400: #e5c158;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #AA8A2E;
+  
+  --color-ink-900: #0a0a0a;
+  --color-ink-950: #050505;
+}
+
+body {
+  @apply bg-ink-950 text-white font-sans antialiased;
+}
